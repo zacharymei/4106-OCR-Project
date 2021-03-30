@@ -93,7 +93,7 @@ def maximazation(input, threshold):
     return input
 
 
-def seg(input, thresholdRow, thresholdChar):
+def seg(input, thresholdRow = tsRow, thresholdChar = tsChar):
 
     rows = segRow(input, thresholdRow)
 
@@ -156,7 +156,7 @@ def segmentationRun(input):
 
     img = cv2.imread(str(input), 0)
     cv2.imshow('img', img)
-    output = seg(img, tsRow, tsChar)
+    output = seg(img)
 
     plt.show()
     cv2.waitKey(0)
