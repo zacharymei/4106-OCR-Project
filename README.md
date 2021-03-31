@@ -10,10 +10,24 @@ tsChar = threshold for Character
 ```
 Make it large if the segmented does not cover the whole character
 ```python
-function seg(input, tsRow, tsChar)
+function seg(input, tsRow=default, tsChar=default)
 input = image to be segmented
 return list of segmentaed image in numpy Matrix
 ```
 Segments images in paragraph to each single character   
-character images are stored in Output folder
+character images are stored in Output folder    
 
+### Usage
+call
+```
+seg(input, thresholdRow, thresholdChar)
+```
+or 
+```
+seg(input)
+```
+To test the output   
+run 
+```
+python segmentation.py "your_image"
+```
