@@ -15,6 +15,8 @@ and may break the program to exceed maximum digit handled by Python***
 ```output_file```
 ~~File output to Excel~~    
     
+```print_mode```
+Print the result one by one and show the current recognized character image    
 ### Usage
 Run
 ```
@@ -24,6 +26,14 @@ It uses the default dataset in "BayesDataset" folder
 If you would like to change the dataset folder, run
 ```
 python BayesOCR.py "your_image" "dataset_folder"
+```
+If you would like to sit back and wait for the final result only for the whole paragraph (it takes long)    
+```
+python BayesOCR.py "your_image" false
+```
+or 
+```
+python BayesOCR.py "your_image" "dataset_folder" false
 ```
 
 ## segmentation.py
