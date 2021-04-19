@@ -21,7 +21,10 @@ pixel_difference = 10
 scale = 5
 
 # Whether or not output tables to excels (Depreciated)
-output_file = True
+output_file = False
+
+# Whether print the result one by one and show the current character image
+print_mode = True
 
 
 # Get dataset images
@@ -55,7 +58,7 @@ def getSimilarTable(input, alphas):
 
     similarTable = []
 
-    print("Generating similarity table .. ")
+    print("\nGenerating similarity table .. ")
 
 
     for a in alphas:
@@ -94,16 +97,16 @@ def getSimilarTable(input, alphas):
 def getProbTable(similarTable, dataset):
 
 
-    print("Generating Prob Table..")
     print("Sample size: ", len(similarTable))
     probTable = []
     lastA = " "
+    print("Calculating prob for ", end='', flush=True)
     for similarity in similarTable:
 
         pixel = similarity[1]
 
         if(similarity[0] != lastA):
-            print("Calculating prob for ", str(similarity[0])[0])
+            print(" ", str(similarity[0])[0], end='', flush=True)
             lastA = similarity[0]
 
 
@@ -136,6 +139,7 @@ def getFinalTable(probTable):
     finalTable = []
     checked = []
 
+    print("\nComputing Bayes Score: ", end='', flush=True)
     for p in probTable:
 
         guess = p[0]
@@ -151,38 +155,61 @@ def getFinalTable(probTable):
                             if(product == 0):
                                 print("Reach maximum of python digit, consider increase scale")
                                 exit()
-            print("Computing Bayes Score: ", guess[0])
+            print(" ", guess[0], end='', flush=True)
 
             checked.append(guess)
 
             # ['alphabet', 'image']
             finalTable.append((guess, product))
 
-    if(len(finalTable) > 0):
+    if(print_mode):
 
-        finalTable.sort(key=lambda x: x[1], reverse=True)
-        print("\nRead: ")
-        print("    ", finalTable[0][0][0], "-->", finalTable[0][1])
-        if(len(finalTable) > 3):
-            print("    ", finalTable[1][0][0], "-->", finalTable[0][1])
-            print("    ", finalTable[2][0][0], "-->", finalTable[0][1])
+        if(len(finalTable) > 0):
+
+            finalTable.sort(key=lambda x: x[1], reverse=True)
+            print("\n\nRead: ")
+            print("    ", finalTable[0][0][0], "-->", finalTable[0][1])
+            if(len(finalTable) > 3):
+                print("    ", finalTable[1][0][0], "-->", finalTable[0][1])
+                print("    ", finalTable[2][0][0], "-->", finalTable[0][1])
+
+        print("\nPress any key to continue ..")
 
     return finalTable
 
 def run(input_name, dataset_name = "BayesDataset"):
+
+    if(not os.path.isfile(os.path.join(os.getcwd(), input_name))):
+        print("Cannot find image. Use full name like 'input.png'")
+        exit()
+
     img = cv2.imread(input_name, 0)
     segmented = segmentation.seg(img)
     dataset_images = getAlpha(dataset_name)
+
+    result_string = []
+
+
 
     for row in segmented:
         for char in row:
             similar_table = getSimilarTable(char, dataset_images)
             probability_table = getProbTable(similar_table, dataset_images)
-            getFinalTable(probability_table)
+            final_table = getFinalTable(probability_table)
 
-            cv2.imshow("char", char)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            if(len(final_table)>1):
+                result_string.append(final_table[0][0][0])
+
+
+
+            if(print_mode):
+                cv2.imshow("char", char)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+
+    print("\nRead full paragraph: \n")
+    for s in result_string:
+        print(s, end='', flush=True)
 
 if __name__ == "__main__":
 
@@ -190,7 +217,16 @@ if __name__ == "__main__":
         read_image = sys.argv[1]
         segmentation.output_file = output_file
         if len(sys.argv) >2:
-            dataset = sys.argv[2]
-            run(read_image, dataset)
+            if(sys.argv[2] == "false"):
+                print_mode = False
+                run(read_image)
+            elif(len(sys.argv) >3):
+                dataset = sys.argv[2]
+                if(sys.argv[3] == "false"):
+                    print_mode = False
+                run(read_image, dataset)
+            else:
+                dataset = sys.argv[2]
+                run(read_image, dataset)
         else:
             run(read_image)
