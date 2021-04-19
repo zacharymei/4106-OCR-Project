@@ -22,7 +22,7 @@ Run
 ```
 python BayesOCR.py "your_image" 
 ```
-It uses the default dataset in "BayesDataset" folder
+It uses the default dataset in "BayesDataset" folder. 
 If you would like to change the dataset folder, run
 ```
 python BayesOCR.py "your_image" "dataset_folder"
