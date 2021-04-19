@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import os
 import shutil
 import sys
+import math
+
 
 
 # Threshold for Row Segmentation
@@ -14,7 +16,13 @@ tsRow = 0.9999
 # Threshold for Character Segmentation
 # Make it large if character not fully displayed
 # Range 0.93 to 0.98
-tsChar = 0.95
+tsChar = 0.94
+
+# Whether output the segmented images to the file
+output_file = True
+
+# Whether show the plot of all segmented images
+plot = False
 
 
 # Row Segmentation (input Image, output Images[])
@@ -69,28 +77,51 @@ def segChar(input, threshold):
 
 def maximazation(input, threshold):
 
+    output = input.copy()
+
     for rota in range(4):
-        input = np.rot90(input)
-        height, width = input.shape
+        output = np.rot90(output)
+        height, width = output.shape
 
         white = 0
-        edge = 0
+        edge = []
 
         point = []
         for i in range(height):
             sum = 0
             lastwhite = white
             for j in range(width):
-                sum += input[i, j]
+                sum += output[i, j]
 
             if(sum < width*255*threshold):
-                edge = i
-                break
+                edge.append(i)
 
-        output = input[edge: height]
-        input = output
+        output = output[edge[0]: height]
+        input = center(output, 50, 140)
 
     return input
+
+def center(input, size, threshold):
+
+    height, width = input.shape
+    char_size = size*0.9
+    ratio = char_size / max(height, width)
+
+    if(int(width*ratio) < 2 or int(height*ratio) < 2):
+        resized = cv2.resize(input, (2, 2))
+    else:
+        resized = cv2.resize(input, (int(width*ratio), int(height*ratio)))
+
+    charHeight, charWidth = resized.shape
+
+    panel = np.ones((size, size))*255
+
+    for i in range(-math.floor(charHeight/2), math.floor(charHeight/2)):
+        for j in range(-math.floor(charWidth/2), math.floor(charWidth/2)):
+            if(resized[math.floor(charHeight/2) + i, math.floor(charWidth/2) + j] < threshold):
+                panel[math.floor(size/2) + i, math.floor(size/2) + j] = 0
+
+    return panel
 
 
 def seg(input, thresholdRow = tsRow, thresholdChar = tsChar):
@@ -104,7 +135,40 @@ def seg(input, thresholdRow = tsRow, thresholdChar = tsChar):
 
     # Plot generation
 
-    # Comment from here if you don't need the plot
+    if(plot):
+
+        plotSegmented(fullCharacters, rows)
+
+
+
+    # File Output
+
+    if(output_file):
+
+        current_directory = os.getcwd()
+
+        final_directory = os.path.join(current_directory, 'Output')
+        if os.path.exists(final_directory):
+            shutil.rmtree(final_directory)
+
+        os.makedirs(final_directory)
+
+        row_directory = os.path.join(final_directory, 'Rows')
+        os.makedirs(row_directory)
+
+        for i, row_image in enumerate(rows):
+            cv2.imwrite(os.path.join(row_directory, str(i)+'.png'), row_image)
+
+        for i, row in enumerate(fullCharacters):
+            i_dir = os.path.join(final_directory, str(i))
+            os.makedirs(i_dir)
+            for j, char_image in enumerate(row):
+                cv2.imwrite(os.path.join(i_dir, str(j)+'.png'), char_image)
+
+
+    return fullCharacters
+
+def plotSegmented(fullCharacters, rows):
 
     fig=plt.figure(figsize=(rows[0].shape[1]*0.2, rows[0].shape[0]*0.2))
     column = max([len(l) for l in fullCharacters])
@@ -120,34 +184,6 @@ def seg(input, thresholdRow = tsRow, thresholdChar = tsChar):
 
     fig.tight_layout()
 
-    # Comment to here if you don't need the plot
-
-
-
-    # File Output
-
-    current_directory = os.getcwd()
-
-    final_directory = os.path.join(current_directory, 'Output')
-    if os.path.exists(final_directory):
-        shutil.rmtree(final_directory)
-
-    os.makedirs(final_directory)
-
-    row_directory = os.path.join(final_directory, 'Rows')
-    os.makedirs(row_directory)
-
-    for i, row_image in enumerate(rows):
-        cv2.imwrite(os.path.join(row_directory, str(i)+'.png'), row_image)
-
-    for i, row in enumerate(fullCharacters):
-        i_dir = os.path.join(final_directory, str(i))
-        os.makedirs(i_dir)
-        for j, char_image in enumerate(row):
-            cv2.imwrite(os.path.join(i_dir, str(j)+'.png'), char_image)
-
-
-    return fullCharacters
 
 
 # Run the program
@@ -158,12 +194,19 @@ def segmentationRun(input):
     cv2.imshow('img', img)
     output = seg(img)
 
+
+
     plt.show()
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 # Run this program by segmentation.py [image_filename]
 
-if len(sys.argv) >1:
-    read_image = sys.argv[1]
-    segmentationRun(read_image)
+if __name__ == "__main__":
+
+    if len(sys.argv) >1:
+        read_image = sys.argv[1]
+        plot = True
+        if len(sys.argv) >2:
+            output_file = False if sys.argv[2] == "false" else True
+        segmentationRun(read_image)
