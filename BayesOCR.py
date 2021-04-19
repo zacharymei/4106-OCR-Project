@@ -5,16 +5,26 @@ import math
 import pandas as pd
 import sys
 
-
-#from segmentation import *
 import segmentation
 
+# The threshold for comparing similarity between pixels
+# Make it large for ambigious image
+# Range: 1 to 255
+# Default = 10
 pixel_difference = 10
+
+# Scaling factor for resizing images in comparison
+# Low Scale can produce large amount of samples and require exceed memory
+# Low Scale may break the program to exceed maximum digit handled by Python
+# Range: 1 to 50(size of dataset image)
+# Default = 5
 scale = 5
 
+# Whether or not output tables to excels (Depreciated)
 output_file = True
 
 
+# Get dataset images
 
 def getAlpha(folder = "BayesDataset"):
     alphas = []
@@ -34,6 +44,9 @@ def getAlpha(folder = "BayesDataset"):
 
 
     return alphas
+
+# Compare the character with the dataset.
+# Generate similarity table for each pixel
 
 def getSimilarTable(input, alphas):
 
@@ -76,7 +89,7 @@ def getSimilarTable(input, alphas):
     return similarTable
 
 
-
+# Calculat probability based on Bayes Theorem
 
 def getProbTable(similarTable, dataset):
 
@@ -113,6 +126,11 @@ def getProbTable(similarTable, dataset):
 
     return probTable
 
+
+
+# Naive Bayes Classifier
+# Compute final result
+
 def getFinalTable(probTable):
 
     finalTable = []
@@ -131,8 +149,8 @@ def getFinalTable(probTable):
                             product *= q[2]
 
                             if(product == 0):
-                                print("Reach maximum of python digit, consider increase recognition scale")
-                                break
+                                print("Reach maximum of python digit, consider increase scale")
+                                exit()
             print("Computing Bayes Score: ", guess[0])
 
             checked.append(guess)
@@ -140,11 +158,14 @@ def getFinalTable(probTable):
             # ['alphabet', 'image']
             finalTable.append((guess, product))
 
-    finalTable.sort(key=lambda x: x[1], reverse=True)
-    print("\nRead: ")
-    print(finalTable[0][0][0], "-->", finalTable[0][1])
-    print(finalTable[1][0][0], "-->", finalTable[0][1])
-    print(finalTable[2][0][0], "-->", finalTable[0][1])
+    if(len(finalTable) > 0):
+
+        finalTable.sort(key=lambda x: x[1], reverse=True)
+        print("\nRead: ")
+        print("    ", finalTable[0][0][0], "-->", finalTable[0][1])
+        if(len(finalTable) > 3):
+            print("    ", finalTable[1][0][0], "-->", finalTable[0][1])
+            print("    ", finalTable[2][0][0], "-->", finalTable[0][1])
 
     return finalTable
 
