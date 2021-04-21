@@ -16,7 +16,7 @@ tsRow = 0.9999
 # Threshold for Character Segmentation
 # Make it large if character not fully displayed
 # Range 0.93 to 0.98
-tsChar = 0.94
+tsChar = 0.95
 
 # Whether output the segmented images to the file
 output_file = True
@@ -46,7 +46,7 @@ def segRow(input, threshold):
 
         if(white < lastwhite):
             start = i
-        if(black < lastblack):
+        if(black < lastblack or i == height-1):
             end = i
 
         if(end != 0):
